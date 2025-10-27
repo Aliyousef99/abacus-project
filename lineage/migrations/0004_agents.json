@@ -1,0 +1,65 @@
+[
+    {
+        "alias": "The Dragon",
+        "real_name": "Lang Buddha",
+        "status": "Active",
+        "loyalty_type": "Ideological",
+        "key_skill": "Grand Strategy, Financial Warfare, Infiltration"
+    },
+    {
+        "alias": "The Ghost",
+        "real_name": "Tony Corleone",
+        "status": "Active",
+        "loyalty_type": "Personal",
+        "key_skill": "Wetwork, Counter-Intelligence, Infiltration"
+    },
+    {
+        "alias": "The Architect",
+        "real_name": "Nino Chavez",
+        "status": "Inactive (Legacy)",
+        "loyalty_type": "Ideological",
+        "key_skill": "Political Manipulation, Information Brokering"
+    },
+    {
+        "alias": "The Cipher",
+        "real_name": "Eve Summers",
+        "status": "Active",
+        "loyalty_type": "Transactional",
+        "key_skill": "Hacking, Electronic Warfare, Data Extraction"
+    },
+    {
+        "alias": "The Quartermaster",
+        "real_name": "Harry Brown",
+        "status": "Active",
+        "loyalty_type": "Transactional",
+        "key_skill": "Logistics, Arms Dealing, Asset Procurement"
+    },
+    {
+        "alias": "The Face",
+        "real_name": "Cassie Muggins",
+        "status": "Active",
+        "loyalty_type": "Situational",
+        "key_skill": "Social Engineering, Infiltration (High Society), Intel Gathering"
+    },
+    {
+        "alias": "Clean Slate",
+        "real_name": "[UNKNOWN]",
+        "status": "Active (On Retainer)",
+        "loyalty_type": "Transactional",
+        "key_skill": "Crime Scene Sanitization, Body Disposal"
+    },
+    {
+        "alias": "The Pawn",
+        "real_name": "Councilman Davis",
+        "status": "Compromised",
+        "loyalty_type": "Coerced",
+        "key_skill": "Political Access, Legislative Influence"
+    },
+    {
+        "alias": "Mickey The Rat",
+        "real_name": "Mickey",
+        "status": "Active (Informant)",
+        "loyalty_type": "Transactional",
+        "key_skill": "Low-Level Intel, Rumor Mill"
+    }
+]
