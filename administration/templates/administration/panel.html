@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administration Panel</title>
+</head>
+<body>
+    <h1>Delegate Authority</h1>
+    <div id="delegation-form">
+        <h2>Grant Protector's Mantle</h2>
+        <select id="heir-select">
+            <option value="">Select Heir</option>
+            {% for heir in heirs %}
+                <option value="{{ heir.id }}">{{ heir.username }}</option>
+            {% endfor %}
+        </select>
+        <input type="number" id="duration-input" placeholder="Duration in hours">
+        <button id="grant-button">Grant Protector's Mantle</button>
+    </div>
+
+    <script>
+        document.getElementById('grant-button').addEventListener('click', () => {
+            const heirId = document.getElementById('heir-select').value;
+            const duration = document.getElementById('duration-input').value;
+
+            if (!heirId || !duration) {
+                alert('Please select an Heir and enter a duration.');
+                return;
+            }
+
+            fetch('/api/users/grant-mantle/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + localStorage.getItem('access_token') // Assuming you store the token in localStorage
+                },
+                body: JSON.stringify({
+                    heir_id: heirId,
+                    duration_hours: duration
+                })
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert('Mantle granted successfully.');
+                    window.location.reload();
+                } else {
+                    alert('Failed to grant Mantle.');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

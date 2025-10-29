@@ -1,0 +1,25 @@
+# Django Core
+django
+
+# Database
+# Use psycopg2-binary for ease of installation.
+# For production, consider using psycopg2 and installing system dependencies.
+psycopg2-binary
+dj-database-url
+
+# Configuration
+python-decouple
+bcrypt # For secure password hashing
+
+# REST API
+djangorestframework
+djangorestframework-simplejwt
+django-cors-headers
+
+# Static Files & Production
+# WhiteNoise is used to serve static files in production.
+# The [brotli] extra adds support for Brotli compression.
+whitenoise[brotli]
+
+# Production WSGI Server
+gunicorn

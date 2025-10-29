@@ -4,4 +4,9 @@ from .models import Agent
 class AgentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Agent
-        fields = ['id', 'alias', 'real_name', 'status', 'loyalty_type', 'key_skill', 'updated_at']
+        # Ensure all fields from the model are included, especially the new ones.
+        fields = [
+            'id', 'alias', 'real_name', 'status', 'key_skill', 'loyalty_type',
+            'summary', 'picture_url', 'personality', 'locations', 'vehicles',
+            'surveillance_images'
+        ]
