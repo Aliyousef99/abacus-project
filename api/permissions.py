@@ -17,6 +17,9 @@ def get_user_role(user):
                     return 'PROTECTOR'
             except ObjectDoesNotExist:
                 pass  # No mantle record; proceed with base role
+        # Backwards-compatibility: map legacy 'OVERLOOKER' to new 'OBSERVER'
+        if base_role == 'OVERLOOKER':
+            return 'OBSERVER'
         return base_role
     except AttributeError:
         # This can happen if the UserProfile was not created for some reason
@@ -46,10 +49,14 @@ class IsHeir(BasePermission):
     def has_permission(self, request, view):
         return get_user_role(request.user) in ['HEIR', 'HQ']
 
-class IsOverlooker(BasePermission):
-    """Allows access only to users with the 'Overlooker' role."""
+class IsObserver(BasePermission):
+    """Allows access only to users with the 'Observer' role."""
     def has_permission(self, request, view):
-        return get_user_role(request.user) in ['OVERLOOKER', 'HQ']
+        return get_user_role(request.user) in ['OBSERVER', 'HQ']
+
+# Backwards-compatible alias
+class IsOverlooker(IsObserver):
+    pass
 
 class IsProtectorOrHeir(BasePermission):
     """Allows access to users with the 'Protector' or 'Heir' role."""

@@ -58,17 +58,28 @@ class VehicleSerializer(serializers.ModelSerializer):
 class BulletinSerializer(serializers.ModelSerializer):
     created_by_username = serializers.CharField(source='created_by.username', read_only=True)
     acknowledged = serializers.SerializerMethodField()
+    acknowledged_by = serializers.SerializerMethodField()
+    total_users = serializers.SerializerMethodField()
 
     class Meta:
         model = Bulletin
-        fields = ['id', 'title', 'message', 'audience', 'created_by', 'created_by_username', 'created_at', 'acknowledged']
-        read_only_fields = ['created_by', 'created_by_username', 'created_at', 'acknowledged']
+        fields = ['id', 'title', 'message', 'audience', 'created_by', 'created_by_username', 'created_at', 'acknowledged', 'acknowledged_by', 'total_users']
+        read_only_fields = ['created_by', 'created_by_username', 'created_at', 'acknowledged', 'acknowledged_by', 'total_users']
 
     def get_acknowledged(self, obj):
         user = self.context.get('request').user if self.context.get('request') else None
         if not user or not user.is_authenticated:
             return False
         return obj.acks.filter(user=user).exists()
+
+    def get_acknowledged_by(self, obj):
+        # Return a list of usernames of all users who have acknowledged the bulletin.
+        return [ack.user.username for ack in obj.acks.select_related('user').all()]
+
+    def get_total_users(self, obj):
+        from django.contrib.auth.models import User
+        # We count all active users as the potential audience for any bulletin.
+        return User.objects.filter(is_active=True).count()
 
 class NotificationSerializer(serializers.ModelSerializer):
     class Meta:

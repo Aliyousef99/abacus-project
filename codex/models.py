@@ -171,6 +171,7 @@ class Notification(models.Model):
         TASK_ASSIGNED = 'TASK_ASSIGNED', 'Task Assigned'
         OPERATION_STATUS = 'OPERATION_STATUS', 'Operation Status Changed'
         MANTLE = 'MANTLE', "Protector's Mantle"
+        BULLETIN_ACK = 'BULLETIN_ACK', 'Bulletin Acknowledged'
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
     notif_type = models.CharField(max_length=40, choices=Type.choices)

@@ -248,7 +248,7 @@ class TaskViewSet(viewsets.ModelViewSet):
         role = get_user_role(self.request.user)
         if mine == '1':
             qs = qs.filter(assigned_to=self.request.user)
-        elif role == 'PROTECTOR':
+        elif role in ['PROTECTOR', 'HQ']:
             pass
         elif role == 'HEIR':
             # Heir sees tasks assigned to them OR tasks they created
@@ -296,35 +296,90 @@ class TaskViewSet(viewsets.ModelViewSet):
         except Exception:
             pass
 
+    @action(detail=True, methods=['post'])
+    def complete(self, request, pk=None):
+        task = self.get_object()
+        role = get_user_role(request.user)
+        # Allow Protector/HQ to complete any task; others only their own
+        if role not in ['PROTECTOR', 'HQ'] and task.assigned_to_id != getattr(request.user, 'id', None):
+            return Response({'error': 'Not permitted to update this task.'}, status=status.HTTP_403_FORBIDDEN)
+        task.status = Task.Status.SUCCESS
+        task.save(update_fields=['status'])
+        log_action(request.user, f"Completed task '{task.title}'", target=task)
+        return Response(self.get_serializer(task).data)
+
+    @action(detail=True, methods=['post'], url_path='set-status')
+    def set_status(self, request, pk=None):
+        task = self.get_object()
+        role = get_user_role(request.user)
+        if role not in ['PROTECTOR', 'HQ'] and task.assigned_to_id != getattr(request.user, 'id', None):
+            return Response({'error': 'Not permitted to update this task.'}, status=status.HTTP_403_FORBIDDEN)
+        new_status = request.data.get('status')
+        if new_status not in dict(Task.Status.choices):
+            return Response({'error': 'Invalid status'}, status=status.HTTP_400_BAD_REQUEST)
+        task.status = new_status
+        task.save(update_fields=['status'])
+        log_action(request.user, f"Set task '{task.title}' status to {new_status}", target=task)
+        return Response(self.get_serializer(task).data)
+
+
 class BulletinViewSet(viewsets.ModelViewSet):
     queryset = Bulletin.objects.select_related('created_by').all().order_by('-created_at')
     serializer_class = BulletinSerializer
 
     def get_permissions(self):
-        if self.action in ['list', 'retrieve', 'ack']:
+        if self.action in ['list', 'retrieve', 'ack', 'create']:
             self.permission_classes = [IsAuthenticated]
-        else:  # create, update, destroy
-            self.permission_classes = [IsTrueProtector]
+        else:  # update, partial_update, destroy
+            self.permission_classes = [IsAuthenticated] # Permissions checked in methods
         return super().get_permissions()
 
     def get_queryset(self):
         qs = super().get_queryset()
-        role = get_user_role(self.request.user)
-        if role == 'PROTECTOR':
-            return qs
-        return qs.filter(Q(audience='ALL') | Q(audience=role))
+        # Bulletins are for all authenticated users.
+        return qs
 
     def perform_create(self, serializer):
         bulletin = serializer.save(created_by=self.request.user)
         log_action(self.request.user, f"Posted bulletin '{bulletin.title}' to {bulletin.audience}", target=bulletin)
 
+    def update(self, request, *args, **kwargs):
+        bulletin = self.get_object()
+        role = get_user_role(request.user)
+        if bulletin.created_by != request.user and role not in ['PROTECTOR', 'HQ']:
+            return Response({'error': 'You do not have permission to edit this bulletin.'}, status=status.HTTP_403_FORBIDDEN)
+        return super().update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        bulletin = self.get_object()
+        role = get_user_role(request.user)
+        if bulletin.created_by != request.user and role not in ['PROTECTOR', 'HQ']:
+            return Response({'error': 'You do not have permission to delete this bulletin.'}, status=status.HTTP_403_FORBIDDEN)
+        return super().destroy(request, *args, **kwargs)
+
+    @action(detail=False, methods=['post'], permission_classes=[IsHQ], url_path='clear')
+    def clear_board(self, request):
+        """HQ-only: remove all bulletins and acknowledgements."""
+        try:
+            count = Bulletin.objects.count()
+            Bulletin.objects.all().delete()
+            log_action(request.user, f"Cleared bulletin board ({count} items)")
+            return Response({'status': 'ok', 'removed': count})
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     @action(detail=True, methods=['post'], url_path='ack')
     def acknowledge(self, request, pk=None):
         bulletin = self.get_object()
-        role = get_user_role(request.user)
-        if bulletin.audience not in ['ALL', role] and role != 'PROTECTOR':
-            return Response({'error': 'Not allowed to acknowledge this bulletin'}, status=status.HTTP_403_FORBIDDEN)
-        BulletinAck.objects.get_or_create(bulletin=bulletin, user=request.user)
+        _, created = BulletinAck.objects.get_or_create(bulletin=bulletin, user=request.user)
+        # Notify the creator of the bulletin on first acknowledgement
+        if created and bulletin.created_by != request.user:
+            Notification.objects.create(
+                user=bulletin.created_by,
+                notif_type=Notification.Type.BULLETIN_ACK,
+                message=f"{request.user.username} acknowledged your bulletin: '{bulletin.title}'",
+                metadata={'bulletin_id': bulletin.id, 'user_id': request.user.id}
+            )
         return Response({'status': 'acknowledged'})
 
     @action(detail=False, methods=['get'], url_path='unacked-count')
@@ -376,41 +431,17 @@ class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
-    @action(detail=True, methods=['post'])
-    def complete(self, request, pk=None):
-        task = self.get_object()
-        role = get_user_role(request.user)
-        # Allow Protector to complete any task; others only their own
-        if role != 'PROTECTOR' and task.assigned_to_id != getattr(request.user, 'id', None):
-            return Response({'error': 'Not permitted to update this task.'}, status=status.HTTP_403_FORBIDDEN)
-        task.status = Task.Status.SUCCESS
-        task.save(update_fields=['status'])
-        log_action(request.user, f"Completed task '{task.title}'", target=task)
-        return Response(self.get_serializer(task).data)
-
-    @action(detail=True, methods=['post'])
-    def set_status(self, request, pk=None):
-        task = self.get_object()
-        role = get_user_role(request.user)
-        if role != 'PROTECTOR' and task.assigned_to_id != getattr(request.user, 'id', None):
-            return Response({'error': 'Not permitted to update this task.'}, status=status.HTTP_403_FORBIDDEN)
-        new_status = request.data.get('status')
-        if new_status not in dict(Task.Status.choices):
-            return Response({'error': 'Invalid status'}, status=status.HTTP_400_BAD_REQUEST)
-        task.status = new_status
-        task.save(update_fields=['status'])
-        log_action(request.user, f"Set task '{task.title}' status to {new_status}", target=task)
-        return Response(self.get_serializer(task).data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)    
 class VaultAccessMixin:
     permission_classes = [IsAuthenticated]
 
     def _enforce_vault_access(self, request):
         role = get_user_role(request.user)
-        if role not in ['PROTECTOR', 'HEIR']:
+        # Allow HQ full access in addition to Protector/Heir
+        if role not in ['PROTECTOR', 'HEIR', 'HQ']:
             return Response({'error': 'Forbidden'}, status=status.HTTP_403_FORBIDDEN)
-        if role != 'PROTECTOR':
+        # Require secondary auth for Heir only; Protector and HQ bypass
+        if role not in ['PROTECTOR', 'HQ']:
             secondary = request.headers.get('X-Secondary-Auth') or request.data.get('secondary_auth') or request.query_params.get('secondary_auth')
             from django.conf import settings
             if secondary != settings.SECONDARY_PASSPHRASE:
@@ -528,10 +559,10 @@ class VaultItemViewSet(viewsets.ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         role = get_user_role(request.user)
-        if role not in ['PROTECTOR', 'HEIR']:
+        if role not in ['PROTECTOR', 'HEIR', 'HQ']:
             return Response({'error': 'Forbidden'}, status=status.HTTP_403_FORBIDDEN)
-        # Secondary authentication is required unless effective role is Protector
-        if role != 'PROTECTOR':
+        # Secondary authentication is required unless effective role is Protector or HQ
+        if role not in ['PROTECTOR', 'HQ']:
             secondary = request.headers.get('X-Secondary-Auth') or request.query_params.get('secondary_auth')
             from django.conf import settings
             if secondary != settings.SECONDARY_PASSPHRASE:
@@ -540,9 +571,9 @@ class VaultItemViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         role = get_user_role(request.user)
-        if role not in ['PROTECTOR', 'HEIR']:
+        if role not in ['PROTECTOR', 'HEIR', 'HQ']:
             return Response({'error': 'Forbidden'}, status=status.HTTP_403_FORBIDDEN)
-        if role != 'PROTECTOR':
+        if role not in ['PROTECTOR', 'HQ']:
             secondary = request.headers.get('X-Secondary-Auth') or request.data.get('secondary_auth')
             from django.conf import settings
             if secondary != settings.SECONDARY_PASSPHRASE:
@@ -556,9 +587,9 @@ class VaultItemViewSet(viewsets.ModelViewSet):
     # Apply same access + secondary-auth policy to retrieve/update/delete
     def _enforce_vault_access(self, request):
         role = get_user_role(request.user)
-        if role not in ['PROTECTOR', 'HEIR']:
+        if role not in ['PROTECTOR', 'HEIR', 'HQ']:
             return Response({'error': 'Forbidden'}, status=status.HTTP_403_FORBIDDEN)
-        if role != 'PROTECTOR':
+        if role not in ['PROTECTOR', 'HQ']:
             secondary = request.headers.get('X-Secondary-Auth') or request.data.get('secondary_auth') or request.query_params.get('secondary_auth')
             from django.conf import settings
             if secondary != settings.SECONDARY_PASSPHRASE:
@@ -606,5 +637,3 @@ class VaultItemViewSet(viewsets.ModelViewSet):
         except Exception:
             pass
         return super().destroy(request, *args, **kwargs)
-
-

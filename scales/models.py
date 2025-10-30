@@ -14,6 +14,7 @@ class Agent(models.Model):
     known_locations = models.TextField(blank=True)
     known_vehicles = models.TextField(blank=True)
     picture_url = models.URLField(max_length=500, blank=True, null=True)
+    surveillance_images = models.TextField(blank=True, help_text="Comma-separated URLs of surveillance images.")
     threat_level = models.PositiveIntegerField(default=50, blank=True, null=True, help_text="A score from 0-100 indicating threat level.")
     deleted_at = models.DateTimeField(null=True, blank=True, default=None)
 
@@ -28,6 +29,7 @@ class Faction(models.Model):
     threat_index = models.PositiveIntegerField(default=50, help_text="A score from 0-100")
     description = models.TextField(blank=True)
     is_active = models.BooleanField(default=True)
+    picture_url = models.URLField(max_length=500, blank=True, null=True)
     allies = models.CharField(max_length=255, blank=True, help_text="Comma-separated list of allied factions")
     strengths = models.TextField(blank=True)
     weaknesses = models.TextField(blank=True)

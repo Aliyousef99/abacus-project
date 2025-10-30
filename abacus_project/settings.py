@@ -43,6 +43,8 @@ INSTALLED_APPS = [
     'api', # Shared api components
     'audit',
     'administration',
+    'heirslog',
+    'index',
 ]
 
 MIDDLEWARE = [

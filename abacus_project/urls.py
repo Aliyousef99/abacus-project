@@ -22,8 +22,10 @@ urlpatterns = [
     path('api/scales/', include('scales.urls')),
     path('api/codex/', include('codex.urls')),
     path('api/loom/', include('loom.urls')),
+    path('api/index/', include('index.urls')),
     path('api/audit/', include('audit.urls')),
     path('api/users/', include('users.urls')),
     path('administration/', include('administration.urls')),
+    path('api/heirs-log/', include('heirslog.urls')),
     # path('api/bastion/', include('bastion.urls')), # Add when ready
 ]

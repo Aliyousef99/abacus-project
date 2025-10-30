@@ -59,24 +59,64 @@ class FactionViewSet(viewsets.ModelViewSet):
             log_action(self.request.user, f"Denied attempt to delete faction '{faction_name}'", target=instance)
             raise PermissionDenied("You do not have permission to delete factions.")
 
-    @action(detail=True, methods=['post'], url_path='members', permission_classes=[IsProtectorOrHeir])
+    @action(detail=True, methods=['post'], url_path='members', permission_classes=[IsAuthenticated])
     def add_member(self, request, pk=None):
+        """Link an existing IndexProfile to this faction (many-to-many).
+
+        Body: { profile_id: int }
+        """
         faction = self.get_object()
-        agent_id = request.data.get('agent_id')
+        profile_id = request.data.get('profile_id')
         try:
-            agent = Agent.objects.get(id=agent_id)
-            faction.members.add(agent)
-            log_action(request.user, f"Added member '{agent.alias}' to faction '{faction.name}'", target=faction)
-            # Log history snapshot for member count change
-            FactionHistory.objects.create(
-                faction=faction,
-                threat_index=faction.threat_index,
-                member_count=faction.member_count,
-                updated_by=request.user,
-            )
-            return Response({'status': 'member added'}, status=status.HTTP_200_OK)
-        except Agent.DoesNotExist:
-            return Response({'error': 'Agent not found'}, status=status.HTTP_404_NOT_FOUND)
+            idx_models = __import__('index.models', fromlist=['IndexProfile','IndexAffiliation'])
+            IndexProfile = getattr(idx_models, 'IndexProfile')
+            IndexAffiliation = getattr(idx_models, 'IndexAffiliation')
+            profile = IndexProfile.objects.get(id=profile_id)
+            level = request.data.get('level') or None
+            # create/update through model to store level
+            obj, _ = IndexAffiliation.objects.update_or_create(profile=profile, faction=faction, defaults={'level': level})
+            log_action(request.user, f"Linked profile '{profile.full_name}' to faction '{faction.name}'", target=faction)
+            # Optional: history snapshot for member count using index profiles length
+            try:
+                FactionHistory.objects.create(
+                    faction=faction,
+                    threat_index=faction.threat_index,
+                    member_count=faction.index_profiles.count(),
+                    updated_by=request.user,
+                )
+            except Exception:
+                pass
+            return Response({'status': 'linked'}, status=status.HTTP_200_OK)
+        except Exception:
+            return Response({'error': 'Profile not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    @action(detail=True, methods=['post'], url_path='unlink-member', permission_classes=[IsAuthenticated])
+    def unlink_member(self, request, pk=None):
+        """Unlink an IndexProfile from this faction.
+
+        Body: { profile_id: int }
+        """
+        faction = self.get_object()
+        profile_id = request.data.get('profile_id')
+        try:
+            idx_models = __import__('index.models', fromlist=['IndexProfile','IndexAffiliation'])
+            IndexProfile = getattr(idx_models, 'IndexProfile')
+            IndexAffiliation = getattr(idx_models, 'IndexAffiliation')
+            profile = IndexProfile.objects.get(id=profile_id)
+            IndexAffiliation.objects.filter(profile=profile, faction=faction).delete()
+            log_action(request.user, f"Unlinked profile '{profile.full_name}' from faction '{faction.name}'", target=faction)
+            try:
+                FactionHistory.objects.create(
+                    faction=faction,
+                    threat_index=faction.threat_index,
+                    member_count=faction.index_profiles.count(),
+                    updated_by=request.user,
+                )
+            except Exception:
+                pass
+            return Response({'status': 'unlinked'}, status=status.HTTP_200_OK)
+        except Exception:
+            return Response({'error': 'Profile not found'}, status=status.HTTP_404_NOT_FOUND)
 
     @action(detail=True, methods=['get'], url_path='history', permission_classes=[IsAuthenticated])
     def history(self, request, pk=None):

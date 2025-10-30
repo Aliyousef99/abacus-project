@@ -8,7 +8,10 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserProfile
-        fields = ['user_id', 'username', 'role']
+        fields = ['user_id', 'username', 'display_name', 'role']
+        extra_kwargs = {
+            'display_name': { 'required': False, 'allow_blank': True }
+        }
 
 class MantleSerializer(serializers.ModelSerializer):
     heir_id = serializers.IntegerField(source='user.id', read_only=True)

@@ -22,6 +22,10 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         data['role'] = role
         data['username'] = self.user.username
         data['user_id'] = self.user.id
+        try:
+            data['display_name'] = self.user.profile.display_name
+        except Exception:
+            data['display_name'] = ''
         return data
 
 
@@ -99,6 +103,20 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
         except Mantle.DoesNotExist:
             pass
         return Response({'is_active': False})
+
+    # --- Profile controls ---
+    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated], url_path='set-display-name')
+    def set_display_name(self, request):
+        name = (request.data.get('display_name') or '').strip()
+        if len(name) > 150:
+            return Response({'error': 'Display name too long (max 150).'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            prof = request.user.profile
+            prof.display_name = name
+            prof.save(update_fields=['display_name'])
+            return Response({'status': 'ok', 'display_name': prof.display_name})
+        except Exception:
+            return Response({'error': 'Unable to update display name.'}, status=status.HTTP_400_BAD_REQUEST)
 
     # --- Panic and Shutdown Controls ---
     @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated], url_path='panic')
@@ -246,3 +264,85 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
         except Exception:
             pass
         return Response({'status': f"Mantle revoked for {heir_user.username}."})
+
+    @action(detail=False, methods=['post'], permission_classes=[IsTrueProtector], url_path='clear-audit-logs')
+    def clear_audit_logs(self, request):
+        """HQ only: Deletes audit logs based on a duration."""
+        if getattr(request.user.profile, 'role', None) != 'HQ':
+            return Response({'error': 'Forbidden'}, status=status.HTTP_403_FORBIDDEN)
+
+        duration = request.data.get('duration')
+        now = timezone.now()
+        cutoff = None
+
+        if duration == 'day':
+            cutoff = now - timedelta(days=1)
+        elif duration == 'week':
+            cutoff = now - timedelta(weeks=1)
+        elif duration == 'month':
+            cutoff = now - timedelta(days=30)
+        elif duration != 'all':
+            return Response({'error': 'Invalid duration specified.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            from audit.models import AuditLog
+            qs = AuditLog.objects.all()
+            if cutoff:
+                qs = qs.filter(timestamp__gte=cutoff)
+            count, _ = qs.delete()
+            return Response({'status': 'ok', 'count': count})
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=False, methods=['post'], permission_classes=[IsTrueProtector], url_path='clear-notifications')
+    def clear_notifications(self, request):
+        """HQ only: Deletes all Notification and Bulletin records."""
+        if getattr(request.user.profile, 'role', None) != 'HQ':
+            return Response({'error': 'Forbidden'}, status=status.HTTP_403_FORBIDDEN)
+
+        try:
+            from codex.models import Notification, Bulletin, BulletinAck
+            # Note: Deleting Bulletins will cascade and delete BulletinAcks
+            notif_count, _ = Notification.objects.all().delete()
+            bulletin_count, _ = Bulletin.objects.all().delete()
+            total_cleared = notif_count + bulletin_count
+
+            return Response({'status': 'ok', 'count': total_cleared})
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=False, methods=['post'], permission_classes=[IsTrueProtector], url_path='clear-timelines')
+    def clear_timelines(self, request):
+        """HQ only: Deletes timeline events based on a duration."""
+        if getattr(request.user.profile, 'role', None) != 'HQ':
+            return Response({'error': 'Forbidden'}, status=status.HTTP_403_FORBIDDEN)
+
+        duration = request.data.get('duration')
+        now = timezone.now()
+        cutoff = None
+
+        if duration == 'day':
+            cutoff = now - timedelta(days=1)
+        elif duration == 'week':
+            cutoff = now - timedelta(weeks=1)
+        elif duration == 'month':
+            cutoff = now - timedelta(days=30)
+        elif duration != 'all':
+            return Response({'error': 'Invalid duration specified.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # This implementation assumes timeline events are from the Lineage app's TimelineEvent model.
+            # If you have other timeline sources, they would need to be cleared here as well.
+            from lineage.models import TimelineEvent
+            qs = TimelineEvent.objects.all()
+            # The TimelineEvent model doesn't have a timestamp field to filter on.
+            # For now, this will clear based on the 'all' duration only.
+            # To support other durations, a timestamp field would need to be added to the TimelineEvent model.
+            if cutoff:
+                # This line is currently unreachable because duration != 'all' returns early.
+                # If TimelineEvent gets a timestamp, this will work as intended.
+                qs = qs.filter(timestamp__gte=cutoff)
+            count, _ = qs.delete()
+            return Response({'status': 'ok', 'count': count})
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

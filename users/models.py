@@ -8,14 +8,16 @@ class UserProfile(models.Model):
     class Role(models.TextChoices):
         PROTECTOR = 'PROTECTOR', 'Protector'
         HEIR = 'HEIR', 'Heir'
-        OVERLOOKER = 'OVERLOOKER', 'Overlooker'
+        OBSERVER = 'OBSERVER', 'Observer'
         HQ = 'HQ', 'Headquarters'
 
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    # Public-facing name shown to other users; keeps username private
+    display_name = models.CharField(max_length=150, blank=True, default='')
     role = models.CharField(
         max_length=20, 
         choices=Role.choices, 
-        default=Role.OVERLOOKER
+        default=Role.OBSERVER
     )
 
     def __str__(self):
@@ -66,7 +68,11 @@ class PanicAlert(models.Model):
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
-        UserProfile.objects.create(user=instance)
+        # Default display_name to first + last or fallback to username
+        base_name = (f"{(instance.first_name or '').strip()} {(instance.last_name or '').strip()}").strip()
+        if not base_name:
+            base_name = instance.username
+        UserProfile.objects.create(user=instance, display_name=base_name)
 
 @receiver(post_save, sender=User)
 def save_user_profile(sender, instance, **kwargs):

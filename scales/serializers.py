@@ -15,7 +15,7 @@ class FactionSerializer(serializers.ModelSerializer):
         model = Faction
         fields = [
             'id', 'name', 'threat_index', 'description', 'is_active',
-            'allies', 'strengths', 'weaknesses', 'members', 'member_count'
+            'picture_url', 'allies', 'strengths', 'weaknesses', 'members', 'member_count'
         ]
 
     def get_member_count(self, obj):
