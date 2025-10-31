@@ -26,6 +26,5 @@ urlpatterns = [
     path('api/audit/', include('audit.urls')),
     path('api/users/', include('users.urls')),
     path('administration/', include('administration.urls')),
-    path('api/heirs-log/', include('heirslog.urls')),
-    # path('api/bastion/', include('bastion.urls')), # Add when ready
+
 ]

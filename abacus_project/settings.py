@@ -36,14 +36,12 @@ INSTALLED_APPS = [
     # Local Apps
     'users',
     'lineage',
-    'bastion',
     'scales',
     'codex',
     'loom',
     'api', # Shared api components
     'audit',
     'administration',
-    'heirslog',
     'index',
 ]
 
