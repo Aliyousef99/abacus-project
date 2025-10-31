@@ -1,4 +1,35 @@
-# Ignore environment variables file
-.env
+## Root scope: only track backend/
+/*
+!/.gitignore
+!/backend/
+!/README.md
 
-# Other common Django ignores...
+# OS/Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
+*.swp
+*.swo
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Env files
+.env
+.env.*
+backend/.env
+
+# Django
+backend/staticfiles/
+
+# Node/Frontend (not used now)
+
+# Coverage/Reports
+.coverage
+htmlcov/
