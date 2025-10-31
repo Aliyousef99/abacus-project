@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rooster's Rest Supply Co.</title>
+    <link rel="icon" href="https://i.vgy.me/DrCOEf.png" type="image/x-icon">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/keymaster/1.6.2/keymaster.min.js">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    <style>
+        /* Define fonts for the two "worlds" */
+        .font-facade { font-family: 'Inter', sans-serif; }
+        .font-abacus { font-family: 'Space Mono', monospace; }
+
+        /* Custom styles for The Abacus */
+        .font-abacus ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        .font-abacus ::-webkit-scrollbar-track {
+            background: #1f2937; /* gray-800 */
+        }
+        .font-abacus ::-webkit-scrollbar-thumb {
+            background: #4b5563; /* gray-600 */
+            border-radius: 4px;
+        }
+        .font-abacus ::-webkit-scrollbar-thumb:hover {
+            background: #6b7280; /* gray-500 */
+        }
+
+        /* Ticker animation for the alert feed */
+        @keyframes ticker-scroll {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-100%); }
+        }
+        .ticker-item {
+            animation: ticker-scroll 20s linear infinite;
+        }
+
+        /* Pulsing effect for alerts */
+        .pulse-alert {
+            animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .5; }
+        }
+
+        /* Simple scales SVG line */
+        #scales-balance {
+            transition: transform 0.5s ease-in-out;
+        }
+        
+        /* Hide revealable data by default */
+        .revealable-content { display: none; }
+    </style>
+</head>
+<body class="bg-white" id="app-body">
+    <div id="tier-1-facade" class="font-facade flex flex-col min-h-screen bg-gray-50 text-gray-700">
+        <header class="bg-white border-b border-gray-200 shadow-sm">
+            <nav class="container mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+                <div class="text-2xl font-bold text-yellow-800">Rooster's Rest Supply Co.</div>
+                <div id="facade-nav">
+                    <button data-action="navigate-facade" data-page="home" class="text-gray-600 hover:text-yellow-700 px-3 py-2 rounded-md">Home</button>
+                    <button data-action="navigate-facade" data-page="products" class="text-gray-600 hover:text-yellow-700 px-3 py-2 rounded-md">Our Products</button>
+                    <button data-action="navigate-facade" data-page="contact" class="text-gray-600 hover:text-yellow-700 px-3 py-2 rounded-md">Contact Us</button>
+                </div>
+            </nav>
+        </header>
+    
+        <main class="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div id="facade-page-home" class="text-center py-12">
+                <h1 class="text-4xl font-extrabold text-gray-900 mb-4">Welcome to Rooster's Rest Supply Co.</h1>
+                <p class="text-xl text-gray-700 mb-8">Your trusted source for quality goods and unparalleled service.</p>
+                <div class="max-w-3xl mx-auto">
+                    <img src="https://i.vgy.me/lGiZ5N.png" alt="Rooster's Rest Storefront" class="rounded-lg shadow-lg mb-6">
+                    <p class="text-lg text-gray-600 leading-relaxed">
+                        At Rooster's Rest, we pride ourselves on a curated selection of items designed to meet your every need.
+                        From the everyday essentials to those hard-to-find specialties, our commitment to quality and customer
+                        satisfaction is unwavering. Explore our offerings and discover why we're the preferred choice for discerning customers.
+                    </p>
+                </div>
+                </div>
+    
+            <div id="facade-page-products" class="hidden">
+                <h1 class="text-3xl font-bold text-gray-800 mb-8 text-center">Our Products</h1>
+
+                <!-- Food & Drink Section -->
+                <div class="mb-12">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Food & Drink</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div class="bg-white rounded-lg shadow-md p-4 flex flex-col justify-between"><h3 class="font-semibold text-gray-800 mb-4">Lucky Ramen</h3><button class="bg-gray-300 text-gray-500 font-bold py-2 px-4 rounded cursor-not-allowed" disabled>Sold Out</button></div>
+                        <div class="bg-white rounded-lg shadow-md p-4 flex flex-col justify-between"><h3 class="font-semibold text-gray-800 mb-4">Lucky Cooked Ham</h3><button class="bg-gray-300 text-gray-500 font-bold py-2 px-4 rounded cursor-not-allowed" disabled>Sold Out</button></div>
+                        <div class="bg-white rounded-lg shadow-md p-4 flex flex-col justify-between"><h3 class="font-semibold text-gray-800 mb-4">Lucky Dumplings</h3><button class="bg-gray-300 text-gray-500 font-bold py-2 px-4 rounded cursor-not-allowed" disabled>Sold Out</button></div>
+                        <div class="bg-white rounded-lg shadow-md p-4 flex flex-col justify-between"><h3 class="font-semibold text-gray-800 mb-4">Lucky Egg Roll Platter</h3><button class="bg-gray-300 text-gray-500 font-bold py-2 px-4 rounded cursor-not-allowed" disabled>Sold Out</button></div>
+                        <div class="bg-white rounded-lg shadow-md p-4 flex flex-col justify-between"><h3 class="font-semibold text-gray-800 mb-4">Beef Skewer</h3><button class="bg-gray-300 text-gray-500 font-bold py-2 px-4 rounded cursor-not-allowed" disabled>Sold Out</button></div>
+                        <div class="bg-white rounded-lg shadow-md p-4 flex flex-col justify-between"><h3 class="font-semibold text-gray-800 mb-4">Wontons</h3><button class="bg-gray-300 text-gray-500 font-bold py-2 px-4 rounded cursor-not-allowed" disabled>Sold Out</button></div>
+                        <div class="bg-white rounded-lg shadow-md p-4 flex flex-col justify-between"><h3 class="font-semibold text-gray-800 mb-4">Churros</h3><button class="bg-gray-300 text-gray-500 font-bold py-2 px-4 rounded cursor-not-allowed" disabled>Sold Out</button></div>
+                        <div class="bg-white rounded-lg shadow-md p-4 flex flex-col justify-between"><h3 class="font-semibold text-gray-800 mb-4">Fortune Cookie</h3><button class="bg-gray-300 text-gray-500 font-bold py-2 px-4 rounded cursor-not-allowed" disabled>Sold Out</button></div>
+                        <div class="bg-white rounded-lg shadow-md p-4 flex flex-col justify-between"><h3 class="font-semibold text-gray-800 mb-4">Taiyaki</h3><button class="bg-gray-300 text-gray-500 font-bold py-2 px-4 rounded cursor-not-allowed" disabled>Sold Out</button></div>
+                        <div class="bg-white rounded-lg shadow-md p-4 flex flex-col justify-between"><h3 class="font-semibold text-gray-800 mb-4">Black Tea</h3><button class="bg-gray-300 text-gray-500 font-bold py-2 px-4 rounded cursor-not-allowed" disabled>Sold Out</button></div>
+                        <div class="bg-white rounded-lg shadow-md p-4 flex flex-col justify-between"><h3 class="font-semibold text-gray-800 mb-4">Chai Tea</h3><button class="bg-gray-300 text-gray-500 font-bold py-2 px-4 rounded cursor-not-allowed" disabled>Sold Out</button></div>
+                        <div class="bg-white rounded-lg shadow-md p-4 flex flex-col justify-between"><h3 class="font-semibold text-gray-800 mb-4">Green Tea</h3><button class="bg-gray-300 text-gray-500 font-bold py-2 px-4 rounded cursor-not-allowed" disabled>Sold Out</button></div>
+                        <div class="bg-white rounded-lg shadow-md p-4 flex flex-col justify-between"><h3 class="font-semibold text-yellow-800 mb-4">Rooster Booster</h3><button class="bg-gray-300 text-gray-500 font-bold py-2 px-4 rounded cursor-not-allowed" disabled>Sold Out</button></div>
+                    </div>
+                </div>
+
+                <!-- Rooster Toys Section -->
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Rooster Toys</h2>
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <p class="text-gray-600 mb-4">Rooster Toys are the random toys you get from a Cock In A Box meal from Rooster's Rest.</p>
+                        <h3 class="text-xl font-semibold text-gray-800 mb-3">Collection 1</h3>
+                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 text-gray-700">
+                            <div class="bg-gray-100 p-2 rounded-lg text-center">
+                                <img src="https://i.vgy.me/pDkuyN.png" alt="Bjorn" class="w-full h-32 object-contain mb-2 rounded">
+                                <p>Bjorn (1/8)</p>
+                            </div>
+                            <div class="bg-gray-100 p-2 rounded-lg text-center">
+                                <img src="https://i.vgy.me/pRhfzB.png" alt="Gloryon" class="w-full h-32 object-contain mb-2 rounded">
+                                <p>Gloryon (2/8)</p>
+                            </div>
+                            <div class="bg-gray-100 p-2 rounded-lg text-center">
+                                <img src="https://i.vgy.me/MB59X2.png" alt="Lando" class="w-full h-32 object-contain mb-2 rounded">
+                                <p>Lando (3/8)</p>
+                            </div>
+                            <div class="bg-gray-100 p-2 rounded-lg text-center">
+                                <img src="https://i.vgy.me/cxs0J9.png" alt="Meowfurryon" class="w-full h-32 object-contain mb-2 rounded">
+                                <p>Meowfurryon (4/8)</p>
+                            </div>
+                            <div class="bg-gray-100 p-2 rounded-lg text-center">
+                                <img src="https://i.vgy.me/tTJtfe.png" alt="Leyla" class="w-full h-32 object-contain mb-2 rounded">
+                                <p>Leyla (5/8)</p>
+                            </div>
+                            <div class="bg-gray-100 p-2 rounded-lg text-center">
+                                <img src="https://i.vgy.me/EHppWF.png" alt="Stag" class="w-full h-32 object-contain mb-2 rounded">
+                                <p>Stag (6/8)</p>
+                            </div>
+                            <div class="bg-gray-100 p-2 rounded-lg text-center">
+                                <img src="https://i.vgy.me/6q2l82.png" alt="Yaeger" class="w-full h-32 object-contain mb-2 rounded">
+                                <p>Yaeger (7/8)</p>
+                            </div>
+                            <div class="bg-gray-100 p-2 rounded-lg text-center">
+                                <img src="https://i.vgy.me/2rhvDx.png" alt="Lang" class="w-full h-32 object-contain mb-2 rounded">
+                                <p>Lang (8/8)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    
+            <div id="facade-page-contact" class="hidden">
+                <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">Contact Us</h1>
+                <div class="max-w-2xl mx-auto mb-6">
+                    <img src="https://i.vgy.me/9vunPd.png" alt="Rooster's Rest Location" class="rounded-lg shadow-lg w-full">
+                </div>
+                <p class="font-medium text-gray-600 mb-8 text-center">
+                    W. Eclipse Blvd, Vinewood, Los Santos<span id="keyhole" class="cursor-pointer select-none">.</span>
+                </p>
+                <div class="mt-8">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Key Personnel</h2>
+                    <div class="space-y-6">
+                        <!-- CEO -->
+                        <div>
+                            <h3 class="text-xl font-semibold text-gray-700">Penelope Farthing</h3>
+                            <p class="text-gray-600">Chief Executive Officer (CEO)</p>
+                            <p class="text-gray-600">Phone: (415) 596-9191</p>
+                        </div>
+
+                        <!-- COO -->
+                        <div>
+                            <h3 class="text-xl font-semibold text-gray-700">Dewey</h3>
+                            <p class="text-gray-600">Chief Operating Officer (COO)</p>
+                        </div>
+
+                        <!-- Management -->
+                        <div>
+                            <h3 class="text-xl font-semibold text-gray-700">Management</h3>
+                            <div class="ml-4 mt-2 space-y-4">
+                                <div>
+                                    <p class="text-gray-600 font-medium">Kitty Dream (Head Manager)</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-600 font-medium">Scarlet Rose (Head Manager)</p>
+                                    <p class="text-gray-500">Phone: (420) 654-7412</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    
+        <footer class="bg-white border-t border-gray-200 mt-12">
+            </footer>
+    </div>
+    <div id="tier-2-login" class="font-abacus hidden min-h-screen bg-gray-300 flex items-center justify-center p-4">
+        <div class="w-full max-w-md">
+            <form id="login-form" class="space-y-4">
+                <div>
+                    <label for="username" class="block text-sm font-medium text-gray-700 sr-only">Username</label>
+                    <input type="text" id="username" name="username" required
+                           class="block w-full px-4 py-3 bg-white border border-gray-500 rounded-md shadow-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-800"
+                           placeholder="Enter username...">
+                </div>
+                <div>
+                    <label for="passphrase" class="block text-sm font-medium text-gray-700 sr-only">Passphrase</label>
+                    <input type="password" id="passphrase" name="passphrase" required
+                           class="block w-full px-4 py-3 bg-white border border-gray-500 rounded-md shadow-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-800"
+                           placeholder="Enter passphrase...">
+                </div>
+                <button type="submit" id="login-submit"
+                        class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-800 hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-700 disabled:opacity-50">
+                    Authenticate
+                </button>
+            </form>
+            <p id="login-error" class="mt-4 text-center text-red-700 font-medium hidden"></p>
+            <div class="text-center mt-6">
+                <button data-action="back-to-facade" class="text-sm text-gray-600 hover:text-gray-800 hover:underline">Return to site</button>
+            </div>
+        </div>
+    </div>
+    <div id="tier-3-abacus" class="font-abacus hidden min-h-screen bg-gray-900 text-gray-300">
+        <div class="flex flex-col h-screen">
+            
+            <header class="bg-gray-950 border-b border-gray-800 px-4 py-2 flex items-center justify-between z-10">
+                <div id="mantle-banner"></div>
+                <div class="text-lg font-bold text-gray-300">The Abacus</div>
+                <div>
+                    <button id="abacus-notifications-btn" data-action="open-notifications" class="relative text-sm text-gray-400 hover:text-white hover:bg-gray-700 px-3 py-1 rounded-md transition-colors mr-2" title="Notifications">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M10 2a6 6 0 00-6 6v2.586l-.707.707A1 1 0 004 13h12a1 1 0 00.707-1.707L16 10.586V8a6 6 0 00-6-6z" />
+                            <path d="M10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" />
+                        </svg>
+                        <span id="notif-badge" class="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full px-1 hidden">0</span>
+                    </button>
+                    <button data-action="panic" class="text-sm font-bold text-red-500 hover:text-white hover:bg-red-600 border border-red-500 px-3 py-1 rounded-md transition-colors mr-4">Panic</button>
+                    <button data-action="logout" class="text-sm text-gray-400 hover:text-white hover:bg-gray-700 px-3 py-1 rounded-md transition-colors">Logout</button>
+                </div>
+                </header>
+    
+            <div class="flex flex-1 overflow-hidden">
+                <nav id="abacus-main-nav" class="w-48 bg-gray-950 border-r border-gray-800 p-4 space-y-1 overflow-y-auto">
+                    <button data-action="navigate" data-page="dashboard" class="w-full text-left p-3 hover:bg-gray-800 transition-colors duration-200 flex items-center rounded-md">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                        The Pulse</button>
+                    <button data-action="navigate" data-page="lineage" class="w-full text-left p-3 hover:bg-gray-800 transition-colors duration-200 flex items-center rounded-md">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M15 21v-1a6 6 0 00-5.197-5.977" /></svg>
+                        The Lineage</button>
+                    <button data-action="navigate" data-page="scales" class="w-full text-left p-3 hover:bg-gray-800 transition-colors duration-200 flex items-center rounded-md">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" /></svg>
+                        The Scales</button>
+                    <button data-action="navigate" data-page="codex" class="w-full text-left p-3 hover:bg-gray-800 transition-colors duration-200 flex items-center rounded-md">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+                        The Codex</button>
+                    <div id="vault-nav-button-placeholder"></div>
+                    <div id="silo-nav-button-placeholder"></div>
+                    <div id="report-button-placeholder"></div>
+                    <button data-action="navigate" data-page="loom" class="w-full text-left p-3 hover:bg-gray-800 transition-colors duration-200 flex items-center rounded-md">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+                        The Loom</button>
+                    <div id="heirs-log-nav-button-placeholder"></div>
+                    <div id="admin-nav-button-placeholder"></div>
+                    </nav>
+    
+                <main id="abacus-content-area" class="flex-1 p-6 overflow-y-auto">
+                    </main>
+            </div>
+        </div>
+    </div>
+    
+    <div id="abacus-modal" class="font-abacus hidden fixed inset-0 bg-gray-900 bg-opacity-80 z-50 flex items-center justify-center p-4">
+        <div class="bg-gray-950 border border-gray-800 rounded-lg shadow-xl w-full max-w-lg relative">
+            <button data-action="close-modal" class="absolute top-3 right-3 text-gray-500 hover:text-white">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+            <div id="modal-content" class="p-6">
+                <!-- Modal content will be injected here by JavaScript -->
+            </div>
+        </div>
+        </div>
+    <script src="app.js"></script>
+    <div id="message-container"></div>
+    <div id="shutdown-overlay" class="font-abacus hidden fixed inset-0 bg-gray-950 z-50 flex items-center justify-center p-4">
+        <div class="text-center">
+            <div class="text-3xl font-extrabold text-red-600 mb-4">SYSTEM SHUTDOWN</div>
+            <p class="text-gray-400 mb-6">Only Headquarters (HQ) can restore access.</p>
+            <button data-action="logout" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded">Logout</button>
+        </div>
+    </div>
+    </body>
+</html>
